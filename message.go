@@ -138,6 +138,12 @@ func (m *Message) decode(pd packetDecoder) (err error) {
 		if err := m.decodeSet(); err != nil {
 			return err
 		}
+		// The submessages that make up this compressed message should have their timestamp
+		// and message version set to the values of their wrapping compressed message.
+		for _, sub := range m.Set.Messages {
+			sub.Msg.Timestamp = m.Timestamp
+			sub.Msg.Version = m.Version
+		}
 	case CompressionSnappy:
 		if m.Value == nil {
 			break
@@ -147,6 +153,12 @@ func (m *Message) decode(pd packetDecoder) (err error) {
 		}
 		if err := m.decodeSet(); err != nil {
 			return err
+		}
+		// The submessages that make up this compressed message should have their timestamp
+		// and message version set to the values of their wrapping compressed message.
+		for _, sub := range m.Set.Messages {
+			sub.Msg.Timestamp = m.Timestamp
+			sub.Msg.Version = m.Version
 		}
 	default:
 		return PacketDecodingError{fmt.Sprintf("invalid compression specified (%d)", m.Codec)}
